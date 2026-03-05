@@ -6,6 +6,7 @@ use Illuminate\Http\Request;
 use App\Models\Product;
 use App\Models\Order;
 use App\Models\OrderItem;
+use Illuminate\Support\Facades\DB;
 
 class CartController extends Controller
 {
@@ -65,29 +66,42 @@ class CartController extends Controller
             return redirect()->route('cart.index')->with('error', 'Panier vide');
         }
 
-        $total = 0;
+        return DB::transaction(function () use ($cart) {
 
-        foreach ($cart as $item) {
-            $total += $item['price'] * $item['quantity'];
-        }
+            $total = 0;
+            foreach ($cart as $item) {
+                $total += $item['price'] * $item['quantity'];
+            }
 
-        $order = Order::create([
-            'user_id' => auth()->id(),
-            'total' => $total,
-            'status' => 'pending'
-        ]);
-
-        foreach ($cart as $item) {
-            OrderItem::create([
-                'order_id' => $order->id,
-                'product_id' => $item['id'],
-                'qty' => $item['quantity'],
-                'unit_price' => $item['price'],
+            $order = Order::create([
+                'user_id' => auth()->id(),
+                'total' => $total,
+                'status' => 'pending'
             ]);
-        }
 
-        session()->forget('cart');
+            foreach ($cart as $item) {
 
-        return redirect()->route('products.index')->with('success', 'Commande créée');
+                $product = Product::lockForUpdate()->findOrFail($item['id']);
+
+                if ($product->stock < $item['quantity']) {
+                    return redirect()
+                        ->route('cart.index')
+                        ->with('error', "Stock insuffisant pour {$product->name}");
+                }
+
+                OrderItem::create([
+                    'order_id' => $order->id,
+                    'product_id' => $product->id,
+                    'qty' => $item['quantity'],
+                    'unit_price' => $item['price'],
+                ]);
+
+                $product->decrement('stock', $item['quantity']);
+            }
+
+            session()->forget('cart');
+
+            return redirect()->route('products.index')->with('success', 'Commande créée');
+        });
     }
 }
