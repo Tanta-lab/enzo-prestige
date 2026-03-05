@@ -24,19 +24,6 @@ Route::middleware('auth')->group(function () {
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
 });
 
-
-Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(function () {
-    Route::resource('products', ProductController::class);
-});
-
-Route::middleware(['auth','admin'])->prefix('admin')->name('admin.')->group(function () {
-
-    Route::resource('products', ProductController::class);
-    Route::resource('categories', CategoryController::class);
-
-});
-
-
 Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(function () {
 
     Route::get('/', function () {
@@ -47,8 +34,8 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
         ]);
     })->name('home');
 
-    Route::resource('products', \App\Http\Controllers\Admin\ProductController::class);
-    Route::resource('categories', \App\Http\Controllers\Admin\CategoryController::class);
+    Route::resource('products', ProductController::class);
+    Route::resource('categories', CategoryController::class);
 });
 
 require __DIR__.'/auth.php';
