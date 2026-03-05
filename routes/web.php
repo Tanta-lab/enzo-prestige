@@ -7,6 +7,8 @@ use App\Http\Controllers\Admin\CategoryController;
 use App\Models\Product;
 use App\Models\Category;
 use App\Models\Order;
+use App\Http\Controllers\Admin\OrderController;
+use App\Http\Controllers\CartController;
 
 
 
@@ -36,6 +38,21 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
 
     Route::resource('products', ProductController::class);
     Route::resource('categories', CategoryController::class);
+    Route::resource('orders', OrderController::class)->only(['index','show']);
+});
+
+Route::get('/products', function () {
+    return view('products.index', [
+        'products' => Product::orderBy('id','desc')->get(),
+    ]);
+})->name('products.index');
+
+Route::post('/cart/add/{product}', [CartController::class, 'add'])->name('cart.add');
+Route::get('/cart', [CartController::class, 'index'])->name('cart.index');
+Route::post('/cart/remove/{product}', [CartController::class, 'remove'])->name('cart.remove');
+
+Route::middleware('auth')->group(function () {
+    Route::post('/checkout', [CartController::class, 'checkout'])->name('cart.checkout');
 });
 
 require __DIR__.'/auth.php';
