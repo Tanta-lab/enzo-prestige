@@ -1,52 +1,54 @@
 @extends('layouts.app')
 
 @section('content')
-    <div class="container">
-        <h1>Galerie produits</h1>
+    <div class="container page-section">
+        <h1 style="margin-bottom: 20px;">Galerie</h1>
 
         @if(session('success'))
-            <p style="color: green;">{{ session('success') }}</p>
+            <div class="alert-success">{{ session('success') }}</div>
         @endif
 
         @if(session('error'))
-            <p style="color: red;">{{ session('error') }}</p>
+            <div class="alert-error">{{ session('error') }}</div>
         @endif
 
-        <form method="GET" action="{{ route('products.index') }}" style="margin-bottom: 20px; display: flex; gap: 10px; align-items: center; flex-wrap: wrap;">
-            <input
-                type="text"
-                name="search"
-                placeholder="Rechercher un produit..."
-                value="{{ $search }}"
-                style="padding: 8px; min-width: 250px;"
-            >
+        <form method="GET" action="{{ route('products.index') }}" class="form-inline" style="margin-bottom: 28px;">
+            <div style="flex:1; min-width: 240px;">
+                <input
+                    type="text"
+                    name="search"
+                    placeholder="Rechercher un produit..."
+                    value="{{ $search }}"
+                >
+            </div>
 
-            <select name="category" style="padding: 8px;">
-                <option value="">Toutes les catégories</option>
-                @foreach($categories as $category)
-                    <option value="{{ $category->id }}" {{ (string)$categoryId === (string)$category->id ? 'selected' : '' }}>
-                        {{ $category->name }}
-                    </option>
-                @endforeach
-            </select>
+            <div style="min-width: 220px;">
+                <select name="category">
+                    <option value="">Toutes les catégories</option>
+                    @foreach($categories as $category)
+                        <option value="{{ $category->id }}" {{ (string)$categoryId === (string)$category->id ? 'selected' : '' }}>
+                            {{ $category->name }}
+                        </option>
+                    @endforeach
+                </select>
+            </div>
 
             <button type="submit">Filtrer</button>
-            <a href="{{ route('products.index') }}">Réinitialiser</a>
+            <a href="{{ route('products.index') }}" class="nav-link">Réinitialiser</a>
         </form>
 
         @if($products->isEmpty())
-            <p>Aucun produit trouvé.</p>
+            <p class="muted">Aucun produit trouvé.</p>
         @else
-            <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 20px;">
+            <div class="product-grid">
                 @foreach($products as $product)
-                    <div style="border: 1px solid #ddd; border-radius: 10px; padding: 15px; background: #fff;">
-
+                    <div class="product-card">
                         @if($product->images->count())
                             <a href="{{ route('products.show', $product) }}">
                                 <img
                                     src="{{ asset('storage/' . $product->images->first()->path) }}"
                                     alt="{{ $product->name }}"
-                                    style="width: 100%; height: 220px; object-fit: cover; border-radius: 8px; margin-bottom: 12px;"
+                                    class="product-card__image"
                                 >
                             </a>
                         @elseif($product->image)
@@ -54,53 +56,58 @@
                                 <img
                                     src="{{ $product->image }}"
                                     alt="{{ $product->name }}"
-                                    style="width: 100%; height: 220px; object-fit: cover; border-radius: 8px; margin-bottom: 12px;"
+                                    class="product-card__image"
                                 >
                             </a>
                         @else
-                            <a href="{{ route('products.show', $product) }}" style="text-decoration: none; color: inherit;">
-                                <div style="width: 100%; height: 220px; background: #f3f3f3; display: flex; align-items: center; justify-content: center; border-radius: 8px; margin-bottom: 12px;">
-                                    <span>Pas d’image</span>
+                            <a href="{{ route('products.show', $product) }}">
+                                <div class="product-card__image" style="display:flex; align-items:center; justify-content:center;">
+                                    <span class="muted">Pas d’image</span>
                                 </div>
                             </a>
                         @endif
 
-                        <a href="{{ route('products.show', $product) }}" style="text-decoration: none; color: inherit;">
-                            <h3 style="margin-bottom: 8px;">{{ $product->name }}</h3>
-                        </a>
+                        <div class="product-card__body">
+                            <a href="{{ route('products.show', $product) }}">
+                                <h3 class="product-card__title">{{ $product->name }}</h3>
+                            </a>
 
-                        <p style="margin-bottom: 8px;">
-                            {{ \Illuminate\Support\Str::limit($product->description, 100) }}
-                        </p>
-
-                        <p style="margin-bottom: 8px;"><strong>Prix :</strong> {{ number_format($product->price, 2, ',', ' ') }} €</p>
-                        <p style="margin-bottom: 8px;"><strong>Stock :</strong> {{ $product->stock }}</p>
-
-                        <p style="margin-bottom: 12px;">
-                            <strong>Catégories :</strong>
-                            @if($product->categories->count())
-                                {{ $product->categories->pluck('name')->join(', ') }}
-                            @else
-                                Aucune
-                            @endif
-                        </p>
-
-                        @auth
-                            @if($product->stock > 0)
-                                <form action="{{ route('cart.add', $product) }}" method="POST" style="display: flex; gap: 10px; align-items: center;">
-                                    @csrf
-                                    <input type="number" name="quantity" value="1" min="1" max="{{ $product->stock }}" style="width: 70px; padding: 6px;">
-                                    <button type="submit">Ajouter au panier</button>
-                                </form>
-                            @else
-                                <p style="color: red;"><strong>Rupture de stock</strong></p>
-                            @endif
-                        @else
-                            <p>
-                                <a href="{{ route('login') }}">Connectez-vous</a> pour ajouter au panier
+                            <p class="product-card__meta">
+                                {{ \Illuminate\Support\Str::limit($product->description, 90) }}
                             </p>
-                        @endauth
 
+                            <p class="product-card__price">
+                                {{ number_format($product->price, 2, ',', ' ') }} €
+                            </p>
+
+                            <p class="product-card__meta">Stock : {{ $product->stock }}</p>
+
+                            <p class="product-card__meta">
+                                @if($product->categories->count())
+                                    {{ $product->categories->pluck('name')->join(', ') }}
+                                @else
+                                    Aucune catégorie
+                                @endif
+                            </p>
+
+                            @auth
+                                @if($product->stock > 0)
+                                    <form action="{{ route('cart.add', $product) }}" method="POST" class="form-inline" style="margin-top: 14px;">
+                                        @csrf
+                                        <div style="width: 90px;">
+                                            <input type="number" name="quantity" value="1" min="1" max="{{ $product->stock }}">
+                                        </div>
+                                        <button type="submit">Ajouter</button>
+                                    </form>
+                                @else
+                                    <p style="color:#8a1f1f;"><strong>Rupture de stock</strong></p>
+                                @endif
+                            @else
+                                <p class="muted">
+                                    <a href="{{ route('login') }}">Connectez-vous</a> pour ajouter au panier
+                                </p>
+                            @endauth
+                        </div>
                     </div>
                 @endforeach
             </div>

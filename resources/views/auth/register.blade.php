@@ -20,6 +20,10 @@
         <div class="mt-4">
             <x-input-label for="password" :value="__('Password')" />
 
+            <p style="font-size: 14px; color: #666;">
+                Le mot de passe doit contenir au moins 12 caractères, avec majuscule, minuscule, chiffre et caractère spécial.
+            </p>
+
             <x-text-input id="password" class="block mt-1 w-full"
                             type="password"
                             name="password"

@@ -1,77 +1,80 @@
 @extends('layouts.app')
 
 @section('content')
-    <div class="container">
-        <h1>{{ $product->name }}</h1>
-
+    <div class="container page-section">
         @if(session('success'))
-            <p style="color: green;">{{ session('success') }}</p>
+            <div class="alert-success">{{ session('success') }}</div>
         @endif
 
         @if(session('error'))
-            <p style="color: red;">{{ session('error') }}</p>
+            <div class="alert-error">{{ session('error') }}</div>
         @endif
 
-        <div style="display:grid; grid-template-columns: 1fr 1fr; gap: 30px; align-items:start;">
-
-            <div>
+        <div class="detail-layout">
+            <div class="card">
                 @if($product->images->count())
-                    <div style="margin-bottom: 15px;">
-                        <img id="main-product-image"
-                             src="{{ asset('storage/' . $product->images->first()->path) }}"
-                             alt="{{ $product->name }}"
-                             style="width:100%; max-width:500px; height:500px; object-fit:cover; border-radius:12px;">
-                    </div>
+                    <img
+                        id="main-product-image"
+                        src="{{ asset('storage/' . $product->images->first()->path) }}"
+                        alt="{{ $product->name }}"
+                        class="detail-main-image"
+                    >
 
-                    <div style="display:flex; gap:10px; flex-wrap:wrap;">
+                    <div class="thumb-row">
                         @foreach($product->images as $image)
                             <img
                                 src="{{ asset('storage/' . $image->path) }}"
                                 alt="{{ $product->name }}"
-                                style="width:90px; height:90px; object-fit:cover; border-radius:8px; cursor:pointer; border:1px solid #ddd;"
                                 onclick="document.getElementById('main-product-image').src='{{ asset('storage/' . $image->path) }}'"
                             >
                         @endforeach
                     </div>
                 @elseif($product->image)
-                    <img src="{{ $product->image }}" alt="{{ $product->name }}" style="width:100%; max-width:500px; height:500px; object-fit:cover; border-radius:12px;">
+                    <img src="{{ $product->image }}" alt="{{ $product->name }}" class="detail-main-image">
                 @else
-                    <div style="width:100%; max-width:500px; height:500px; background:#f3f3f3; display:flex; align-items:center; justify-content:center; border-radius:12px;">
-                        Pas d’image
+                    <div class="detail-main-image" style="display:flex; align-items:center; justify-content:center;">
+                        <span class="muted">Pas d’image</span>
                     </div>
                 @endif
             </div>
 
-            <div>
-                <p><strong>Prix :</strong> {{ number_format($product->price, 2, ',', ' ') }} €</p>
-                <p><strong>Stock :</strong> {{ $product->stock }}</p>
+            <div class="card">
+                <p class="badge" style="margin-bottom: 12px;">EnzoPrestige</p>
+                <h1>{{ $product->name }}</h1>
 
-                <p>
-                    <strong>Catégories :</strong>
+                <p class="muted" style="margin-bottom: 20px;">
                     @if($product->categories->count())
                         {{ $product->categories->pluck('name')->join(', ') }}
                     @else
-                        Aucune
+                        Aucune catégorie
                     @endif
                 </p>
 
-                <p style="margin-top:20px;">{{ $product->description }}</p>
+                <p style="font-size: 1.2rem; margin-bottom: 10px;">
+                    <strong>{{ number_format($product->price, 2, ',', ' ') }} €</strong>
+                </p>
 
-                <div style="margin-top: 20px;">
-                    @auth
-                        @if($product->stock > 0)
-                            <form action="{{ route('cart.add', $product) }}" method="POST" style="display:flex; gap:10px; align-items:center;">
-                                @csrf
-                                <input type="number" name="quantity" value="1" min="1" max="{{ $product->stock }}" style="width:70px; padding:6px;">
-                                <button type="submit">Ajouter au panier</button>
-                            </form>
-                        @else
-                            <p style="color:red;"><strong>Rupture de stock</strong></p>
-                        @endif
+                <p class="muted" style="margin-bottom: 22px;">Stock disponible : {{ $product->stock }}</p>
+
+                <p style="margin-bottom: 28px;">{{ $product->description }}</p>
+
+                @auth
+                    @if($product->stock > 0)
+                        <form action="{{ route('cart.add', $product) }}" method="POST" class="form-inline">
+                            @csrf
+                            <div style="width: 90px;">
+                                <input type="number" name="quantity" value="1" min="1" max="{{ $product->stock }}">
+                            </div>
+                            <button type="submit">Ajouter au panier</button>
+                        </form>
                     @else
-                        <p><a href="{{ route('login') }}">Connectez-vous</a> pour ajouter ce produit au panier.</p>
-                    @endauth
-                </div>
+                        <p style="color:#8a1f1f;"><strong>Rupture de stock</strong></p>
+                    @endif
+                @else
+                    <p class="muted">
+                        <a href="{{ route('login') }}">Connectez-vous</a> pour commander ce produit.
+                    </p>
+                @endauth
             </div>
         </div>
     </div>
